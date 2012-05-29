@@ -1,0 +1,147 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# barry.allard@gmail.com
+#
+# https://github.com/steakknife  
+#
+# MIT License
+
+def prompt(prompt) ; puts "#{prompt}: " end
+
+def get_line ; gets.chomp end
+
+def ask(prompt)
+  prompt(prompt)
+  get_line
+end 
+
+def unchecked_raw_typed_ask(prompt, type)
+  prompt("Input #{prompt} (#{type})")
+  puts "<Enter> on a blank line to end." if type == :array
+  get_line
+end
+
+def validate(value, validator_proc)
+  ( ! validator_proc.nil? ) ? ( ! ! validator_proc.call(value) )
+                            : true
+end
+
+def raw_typed_ask(prompt, type, validator_proc, empty_okay=false)
+  loop do 
+    value = unchecked_raw_typed_ask(prompt, type)
+    return nil   if ( value.nil? || value.empty? ) && empty_okay
+    return value if validate(value, validator_proc)
+    puts "Invalid format. Try again or Ctrl-C to exit." 
+  end
+end
+
+def typed_ask(prompt, type, validator_proc)
+
+  value = nil
+
+  case type
+    when :array
+      value = []
+      while !(temp_value=raw_typed_ask(prompt, type, validator_proc, empty_okay=true)).nil?
+        value << temp_value
+      end
+    when :string
+      until !(value=raw_typed_ask(prompt, type, validator_proc, empty_okay=false)).nil?
+      end
+  end
+    
+  value
+end
+
+
+
+# Start here.  Map and flashlight with batteries included.
+
+trap("INT") { $stderr.puts "\n  ! Aborted." ; exit 1 }
+
+
+# Obvious.
+
+puts
+puts "parse.com application submission app"
+puts
+puts "Copyright Barry Allard 2012  MIT Licensed"
+puts
+
+
+# Fields to take from the user to be converted to JSON.
+
+application_object = {}
+
+{
+      'name' => [:string, lambda { |s| s =~ /\S/          } ], # Not contrained by Latin.
+     'email' => [:string, lambda { |e| e =~ /[^@]+@[^@]+/ } ], # gTLDs and other weirdness.
+  'position' => [:string, lambda { |p| !p.empty?          } ], # Let's not get HR involved right away on this one.
+     'about' => [:array,  lambda { |a| a.is_a? String     } ], # Life epic here.  In only 49 cantos.
+      'urls' => [:array,  lambda { |s| s =~ /:/           } ], # https://, mailto:, etc.
+}.map do |name, other|
+  application_object[name] = typed_ask(name, *other)
+end
+
+
+# Make it JSON.  Make it awesome.
+
+require 'json'
+
+application_json = JSON.pretty_generate(application_object)
+
+
+# Show the final draft.  Last chance to remove all those false degrees you had in your "pretend" résumé.
+
+puts application_json
+
+exit 1 unless ask('Are you sure you wish to apply? "Yes" to approve', [:string, lambda { |s| s.downcase =~ /yes/ } ])
+
+
+# Send it.  
+
+Net::HTTP.new 'parse.com' do |http| 
+
+  http.use_ssl = true
+
+  response, _ = http.post '/jobs/apply', application_json, 'Content-Type' => 'application/json'
+
+  if response.code.to_s == '200' 
+    puts "Your submission at #{Time.now} to parse.com was successful.  Have a martini."
+    exit 0
+  else
+    puts <<-eos
+    Your submission at #{Time.now} to parse.com was spectacularly UNsuccessful.
+
+    You came off as a noob to your potential coworkers.  *Formerly* potential...
+   
+    You can almost hear the non-psychotic hilarity brewing in just a few hours (or less, depending on timezones) (XKCD and PHDcomics eat your hearts out.  Don't fuck with Dilbert.).
+
+    Just listen (come closer to the screen, I won't bite hard):
+
+    '
+    Hey everybody, I can't fucking believe it.  Get a load of this noob's application in the server log.
+    It it's so hilarious I've got to post this on the 3 upstair fridges and the on the mezzanine level.
+    Post as in POST method, that this genius couldn't obviously handle obviously.  Pre-interview fail #38.  HAHAHAHA. :D
+    This is way too good for reddit.  Subject: Even the user agent says lamer.
+    '
+
+    Pack it up, junior.  It's over.  Accept the fact like 90's hipster punk reunion bands, it's not gonna work out.
+
+    {H/Sh}e wants h{is/er} key back too.  Via postal mail.  No drama or awkward notes.  I mean it.
+
+    This isn't television or an episode of The Office.  Unfortunately, this has now become your life.  Wow, I'm not speechless.
+
+    Code #{response.code}
+
+    PS: I'm glad I'm not you.  If you would like an application for unemployment, click here: http://‽.ws/disab  Good luck.
+
+    eos
+
+    exit 1
+
+  end
+
+end
+
