@@ -31,3 +31,7 @@ MIT
 ## Author
 
 Barry Allard
+
+## Copyright
+
+Now.  Whenever it is for you.
