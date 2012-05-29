@@ -66,7 +66,7 @@ trap("INT") { $stderr.puts "\n  ! Aborted." ; exit 1 }
 puts
 puts "parse.com application submission app"
 puts
-puts "Copyright Barry Allard 2012  MIT Licensed"
+puts "Copyright Now  Barry Allard  MIT Licensed"
 puts
 
 
