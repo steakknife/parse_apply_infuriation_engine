@@ -5,7 +5,7 @@ $:.unshift lib unless $:.include?(lib)
 
 Gem::Specification.new do |s|
   s.name        = "parse_apply_infuriation_engine"
-  s.version     = '0.0.2gamma'
+  s.version     = '0.0.2'
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Barry Allard"]
   s.email       = ["barry@barryallard.name"]
