@@ -34,4 +34,4 @@ Barry Allard
 
 ## Copyright
 
-Now.  Whenever it is for you.
+Now.  Whenever it is for you or the time that you remember this, whichever comes last.
